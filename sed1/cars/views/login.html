@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input {
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+    }
+    button {
+      padding: 10px;
+      width: 100%;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Iniciar sesión</h1>
+  <form id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Correo electrónico" required>
+    <input type="password" id="loginPassword" placeholder="Contraseña" required>
+    <button type="submit">Iniciar sesión</button>
+  </form>
+
+  <script>
+    // Función para manejar el login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      const response = await fetch('/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (response.ok) {
+        const user = await response.json();
+        localStorage.setItem('userId', user._id); // Guardar el ID en localStorage
+        window.location.href = 'coches.html'; // Redirigir a coches.html
+      } else {
+        alert('Credenciales incorrectas');
+      }
+    });
+  </script>
+
+</body>
+</html>

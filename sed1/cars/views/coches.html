@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Coches</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .car-list {
+      margin-top: 20px;
+    }
+    .car-list div {
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin: 10px 0;
+    }
+    button {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gestión de Coches</h1>
+  <h3>Mis Coches</h3>
+  
+  <!-- Formulario para agregar coche -->
+  <div>
+    <h4>Agregar un nuevo coche</h4>
+    <form id="addCarForm">
+      <input type="text" id="make" placeholder="Marca" required>
+      <input type="text" id="model" placeholder="Modelo" required>
+      <input type="number" id="year" placeholder="Año" required>
+      <input type="text" id="color" placeholder="Color" required>
+      <button type="submit">Agregar coche</button>
+    </form>
+  </div>
+
+  <!-- Buscador de coches -->
+  <div>
+    <h4>Buscar coches</h4>
+    <input type="text" id="searchInput" placeholder="Buscar por marca, modelo o año">
+    <button onclick="searchCars()">Buscar</button>
+  </div>
+
+  <!-- Lista de coches -->
+  <div id="carList" class="car-list">
+    <!-- Los coches se cargarán aquí -->
+  </div>
+
+  <script>
+    let userId = localStorage.getItem('userId');
+    if (!userId) {
+      window.location.href = 'login.html'; // Redirigir al login si no hay usuario logueado
+    }
+
+    // Función para cargar los coches
+    async function loadCars() {
+      const response = await fetch(`/cars/my-cars/${userId}`);
+      const cars = await response.json();
+      const carList = document.getElementById('carList');
+      carList.innerHTML = ''; // Limpiar la lista de coches
+
+      cars.forEach(car => {
+        const carDiv = document.createElement('div');
+        carDiv.innerHTML = `
+          <p>${car.make} ${car.model} (${car.year}) - Color: ${car.color}</p>
+          <button onclick="editCar('${car._id}')">Editar</button>
+          <button onclick="deleteCar('${car._id}')">Eliminar</button>
+        `;
+        carList.appendChild(carDiv);
+      });
+    }
+
+    // Función para agregar un coche
+    document.getElementById('addCarForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const make = document.getElementById('make').value;
+      const model = document.getElementById('model').value;
+      const year = document.getElementById('year').value;
+      const color = document.getElementById('color').value;
+
+      const response = await fetch('/cars/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ make, model, year, color, userId })
+      });
+
+      if (response.ok) {
+        loadCars(); // Recargar los coches
+        alert('Coche agregado correctamente');
+      }
+    });
+
+    // Función para eliminar un coche
+    async function deleteCar(carId) {
+      const response = await fetch(`/cars/delete/${carId}`, { method: 'DELETE' });
+      if (response.ok) {
+        loadCars(); // Recargar los coches
+        alert('Coche eliminado');
+      }
+    }
+
+    // Función para editar un coche
+    async function editCar(carId) {
+      const make = prompt("Nueva marca:");
+      const model = prompt("Nuevo modelo:");
+      const year = prompt("Nuevo año:");
+      const color = prompt("Nuevo color:");
+
+      const response = await fetch(`/cars/edit/${carId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ make, model, year, color })
+      });
+
+      if (response.ok) {
+        loadCars(); // Recargar los coches
+        alert('Coche actualizado');
+      }
+    }
+
+    // Función para buscar coches
+    async function searchCars() {
+      const searchTerm = document.getElementById('searchInput').value;
+      const response = await fetch(`/cars/search?searchTerm=${searchTerm}`);
+      const cars = await response.json();
+      const carList = document.getElementById('carList');
+      carList.innerHTML = ''; // Limpiar la lista de coches
+
+      cars.forEach(car => {
+        const carDiv = document.createElement('div');
+        carDiv.innerHTML = `
+          <p>${car.make} ${car.model} (${car.year}) - Color: ${car.color}</p>
+          <button onclick="editCar('${car._id}')">Editar</button>
+          <button onclick="deleteCar('${car._id}')">Eliminar</button>
+        `;
+        carList.appendChild(carDiv);
+      });
+    }
+
+    // Cargar los coches cuando la página cargue
+    loadCars();
+  </script>
+
+</body>
+</html>
